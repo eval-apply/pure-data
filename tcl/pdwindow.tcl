@@ -270,22 +270,57 @@ proc ::pdwindow::validate_tcl {} {
 
 #--create tcl entry-----------------------------------------------------------#
 
-proc ::pdwindow::create_tcl_entry {} {
-# Tcl entry box frame
-    label .pdwindow.tcl.label -text [_ "Tcl:"] -anchor e
-    pack .pdwindow.tcl.label -side left
-    entry .pdwindow.tcl.entry -width 200 \
-       -exportselection 1 -insertwidth 2 -insertbackground blue \
-       -textvariable ::pdwindow::tclentry -font {$::font_family -12}
-    pack .pdwindow.tcl.entry -side left -fill x
-# bindings for the Tcl entry widget
-    bind .pdwindow.tcl.entry <$::modifier-Key-a> "%W selection range 0 end; break"
-    bind .pdwindow.tcl.entry <Return> "::pdwindow::eval_tclentry"
-    bind .pdwindow.tcl.entry <Up>     "::pdwindow::get_history 1"
-    bind .pdwindow.tcl.entry <Down>   "::pdwindow::get_history -1"
-    bind .pdwindow.tcl.entry <KeyRelease> +"::pdwindow::validate_tcl"
+# toggle tcl entry existence
+proc ::pdwindow::toggle_tcl_entry {} {
+    if {[winfo exists .pdwindow.tcl.label] == 0} {
+        create_tcl_entry
+    } else {
+        destroy_tcl_entry
+    }
+}
 
-    bind .pdwindow.text <Key-Tab> "focus .pdwindow.tcl.entry; break"
+proc ::pdwindow::create_tcl_entry {} {
+    if {![winfo exists .pdwindow.tcl.label]} {
+
+        # show Tcl frame
+        pack .pdwindow.tcl -before .pdwindow.text -side bottom -fill x -expand 1
+
+        # Tcl entry box frame
+        label .pdwindow.tcl.label -text [_ "Tcl:"] -anchor e
+        pack .pdwindow.tcl.label -side left
+        entry .pdwindow.tcl.entry -width 200 \
+           -exportselection 1 -insertwidth 2 -insertbackground blue \
+           -textvariable ::pdwindow::tclentry -font {$::font_family -12}
+        pack .pdwindow.tcl.entry -side left -fill x
+
+        # bindings for the Tcl entry widget
+        bind .pdwindow.tcl.entry <$::modifier-Key-a> "%W selection range 0 end; break"
+        bind .pdwindow.tcl.entry <Return> "::pdwindow::eval_tclentry"
+        bind .pdwindow.tcl.entry <Up>     "::pdwindow::get_history 1"
+        bind .pdwindow.tcl.entry <Down>   "::pdwindow::get_history -1"
+        bind .pdwindow.tcl.entry <KeyRelease> +"::pdwindow::validate_tcl"
+
+        bind .pdwindow.text <Key-Tab> "focus .pdwindow.tcl.entry; break"
+    }
+    ::pdwindow::verbose 1 "::pdwindow::create_tcl_entry\n"
+}
+
+proc ::pdwindow::destroy_tcl_entry {} {
+    if {[winfo exists .pdwindow.tcl.label]} {
+
+        # unbind text widget
+        bind .pdwindow.text <Key-Tab> "break"
+
+        # destroy Tcl entry widget
+        pack forget .pdwindow.tcl.label
+        pack forget .pdwindow.tcl.entry
+        ::destroy .pdwindow.tcl.label
+        ::destroy .pdwindow.tcl.entry
+
+        # hide Tcl frame
+        pack forget .pdwindow.tcl
+    }
+    ::pdwindow::verbose 1 "::pdwindow::destroy_tcl_entry\n"
 }
 
 proc ::pdwindow::set_findinstance_cursor {widget key state} {
@@ -379,7 +414,6 @@ proc ::pdwindow::create_window {} {
     #.pdwindow.header.logmenu configure -takefocus 1
     pack .pdwindow.header.logmenu -side left
     frame .pdwindow.tcl -borderwidth 0
-    pack .pdwindow.tcl -side bottom -fill x
 # TODO this should use the pd_font_$size created in pd-gui.tcl    
     text .pdwindow.text -relief raised -bd 2 -font {$::font_family -12} \
         -highlightthickness 0 -borderwidth 1 -relief flat \
@@ -417,5 +451,4 @@ proc ::pdwindow::create_window {} {
     # wait until .pdwindow.tcl.entry is visible before opening files so that
     # the loading logic can grab it and put up the busy cursor
     tkwait visibility .pdwindow.text
-#    create_tcl_entry
 }

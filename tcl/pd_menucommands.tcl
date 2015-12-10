@@ -72,6 +72,14 @@ proc ::pd_menucommands::menu_toggle_editmode {} {
 }
 
 # ------------------------------------------------------------------------------
+# functions called from Help menu
+
+# toggle tcl prompt existence
+proc ::pd_menucommands::menu_tclprompt {} {
+    ::pdwindow::toggle_tcl_entry
+}
+
+# ------------------------------------------------------------------------------
 # generic procs for sending menu events
 
 # send a message to a pd canvas receiver
